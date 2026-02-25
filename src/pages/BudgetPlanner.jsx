@@ -119,7 +119,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCateg
   const displayAmount = (val) => {
     const n = Number(val) || 0;
     if (n === 0) return "";
-    return n.toLocaleString("en-NG");
+    return formatBudgetAmount(String(val));
   };
 
   // State for inline add-category

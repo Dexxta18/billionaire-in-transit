@@ -168,9 +168,11 @@ export function calculateNewNigeriaTaxActPIT({
         taxableIncome,
         tax,
         effectiveRate: gross > 0 ? tax / gross : 0,
-        netAnnual: gross - tax,
-        netMonthly: (gross - tax) / 12,
+        netAnnual: gross - tax - pension - nhf,
+        netMonthly: (gross - tax - pension - nhf) / 12,
         monthlyTax: tax / 12,
+        monthlyPension: pension / 12,
+        monthlyNhf: nhf / 12,
     };
 }
 

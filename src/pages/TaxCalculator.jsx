@@ -24,14 +24,25 @@ import {
 } from "../utils/calculations";
 
 export default function TaxCalculator({ taxInput, setTaxInput }) {
-    // Format number with commas for display in inputs
-    const formatWithCommas = (val) => {
-        const n = Number(val) || 0;
-        if (n === 0) return "";
-        return n.toLocaleString("en-NG");
+    // Format a raw input string: add commas to integer part, keep decimal as-is
+    const formatWithCommas = (raw) => {
+        let str = String(raw).replace(/[^\d.]/g, "");
+        if (!str || str === "0") return "";
+        // strip leading zeros but keep "0."
+        str = str.replace(/^0+(\d)/, "$1");
+        const parts = str.split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0];
     };
-    // Strip commas and parse
+    // Strip commas and parse to number
     const parseNum = (str) => Number(String(str).replace(/,/g, "")) || 0;
+
+    // Track raw display strings for inputs so decimals are preserved while typing
+    const [rawInputs, setRawInputs] = React.useState({
+        gross: formatWithCommas(taxInput.periodMode === "monthly" ? taxInput.monthlyGross : taxInput.annualGross),
+        rent: formatWithCommas(taxInput.annualRentPaid),
+        nhfBasic: formatWithCommas(taxInput.annualBasicForNHF),
+    });
 
     const annualGrossForTax = useMemo(() => {
         const m = Number(taxInput.monthlyGross) || 0;
@@ -56,13 +67,15 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
 
     const breakdownRows = [
         ["Gross income", result.gross],
-        ["Pension", result.pension],
-        ["NHF", result.nhf],
+        ["Pension (annual)", result.pension],
+        ["NHF (annual)", result.nhf],
         ["Rent paid", result.rentPaid],
         ["Rent relief", result.rentRelief],
         ["Taxable income", result.taxableIncome],
         ["Annual tax", result.tax],
         ["Monthly tax", result.monthlyTax],
+        ["Monthly pension", result.monthlyPension],
+        ["Monthly NHF", result.monthlyNhf],
         ["Net monthly take-home", result.netMonthly],
     ];
 
@@ -132,12 +145,10 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                         <input
                             type="text"
                             inputMode="decimal"
-                            value={formatWithCommas(
-                                taxInput.periodMode === "monthly"
-                                    ? taxInput.monthlyGross
-                                    : taxInput.annualGross
-                            )}
+                            value={rawInputs.gross}
                             onChange={(e) => {
+                                const formatted = formatWithCommas(e.target.value);
+                                setRawInputs((r) => ({ ...r, gross: formatted }));
                                 const val = parseNum(e.target.value);
                                 setTaxInput((v) =>
                                     taxInput.periodMode === "monthly"
@@ -195,13 +206,15 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                         <input
                             type="text"
                             inputMode="decimal"
-                            value={formatWithCommas(taxInput.annualRentPaid)}
-                            onChange={(e) =>
+                            value={rawInputs.rent}
+                            onChange={(e) => {
+                                const formatted = formatWithCommas(e.target.value);
+                                setRawInputs((r) => ({ ...r, rent: formatted }));
                                 setTaxInput((v) => ({
                                     ...v,
                                     annualRentPaid: parseNum(e.target.value),
-                                }))
-                            }
+                                }));
+                            }}
                             className="input-field"
                         />
                     </div>
