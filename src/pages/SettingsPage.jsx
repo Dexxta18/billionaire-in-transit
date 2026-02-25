@@ -15,12 +15,18 @@ import {
     ChevronDown,
     ChevronUp,
     Heart,
+    Tag,
+    X,
+    Plus,
 } from "lucide-react";
 
 import {
     exportTransactionsCSV,
     downloadFile,
     seedDemoTransactions,
+    EXPENSE_CATEGORIES,
+    INCOME_CATEGORIES,
+    CATEGORY_ICONS,
 } from "../utils/calculations";
 
 /* ── Theme definitions ── */
@@ -161,8 +167,13 @@ export default function SettingsPage({
     setDarkMode,
     colorTheme,
     setColorTheme,
+    customCategories = [],
+    onAddCategory,
+    onDeleteCategory,
 }) {
     const [showAbout, setShowAbout] = useState(false);
+    const [newCatName, setNewCatName] = useState("");
+    const [newCatType, setNewCatType] = useState("expense");
 
     const handleExportJSON = () => {
         const payload = {
@@ -367,6 +378,208 @@ export default function SettingsPage({
                             </span>
                         </motion.button>
                     ))}
+                </div>
+            </div>
+
+            {/* ── Category Management ── */}
+            <div
+                className="glass-card"
+                style={{ padding: 20, borderRadius: "var(--radius-md)" }}
+            >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                    <Tag size={18} style={{ color: "var(--clr-primary)" }} />
+                    <span className="section-title" style={{ fontSize: 16 }}>
+                        Categories
+                    </span>
+                </div>
+
+                {/* Add new category */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                    <select
+                        value={newCatType}
+                        onChange={(e) => setNewCatType(e.target.value)}
+                        style={{
+                            padding: "10px 12px",
+                            borderRadius: 10,
+                            border: "1.5px solid var(--clr-border)",
+                            background: "var(--clr-bg)",
+                            color: "var(--clr-text)",
+                            fontSize: 13,
+                            fontFamily: "var(--font-main)",
+                            cursor: "pointer",
+                        }}
+                    >
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                    <input
+                        type="text"
+                        placeholder="New category name"
+                        value={newCatName}
+                        onChange={(e) => setNewCatName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                const name = newCatName.trim();
+                                if (!name) return;
+                                onAddCategory?.({ name, type: newCatType });
+                                setNewCatName("");
+                            }
+                        }}
+                        style={{
+                            flex: 1,
+                            padding: "10px 12px",
+                            borderRadius: 10,
+                            border: "1.5px solid var(--clr-border)",
+                            background: "var(--clr-bg)",
+                            color: "var(--clr-text)",
+                            fontSize: 13,
+                            fontFamily: "var(--font-main)",
+                            minWidth: 0,
+                        }}
+                    />
+                    <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                            const name = newCatName.trim();
+                            if (!name) return;
+                            onAddCategory?.({ name, type: newCatType });
+                            setNewCatName("");
+                        }}
+                        style={{
+                            padding: "10px 14px",
+                            borderRadius: 10,
+                            background: "var(--clr-primary)",
+                            color: "white",
+                            border: "none",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Plus size={18} />
+                    </motion.button>
+                </div>
+
+                {/* Expense categories */}
+                <p style={{ fontSize: 12, fontWeight: 700, color: "var(--clr-text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Expense Categories
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                    {EXPENSE_CATEGORIES.map((cat) => (
+                        <span
+                            key={cat}
+                            style={{
+                                fontSize: 12,
+                                padding: "6px 10px",
+                                borderRadius: 20,
+                                background: "rgba(239,68,68,0.08)",
+                                color: "var(--clr-text)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
+                            }}
+                        >
+                            {CATEGORY_ICONS[cat] || "📦"} {cat}
+                        </span>
+                    ))}
+                    {customCategories
+                        .filter((c) => c.type === "expense")
+                        .map((cat) => (
+                            <span
+                                key={cat.name}
+                                style={{
+                                    fontSize: 12,
+                                    padding: "6px 10px",
+                                    borderRadius: 20,
+                                    background: "rgba(239,68,68,0.08)",
+                                    color: "var(--clr-text)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                    border: "1.5px dashed rgba(239,68,68,0.3)",
+                                }}
+                            >
+                                📦 {cat.name}
+                                <button
+                                    onClick={() => {
+                                        if (confirm(`Delete category "${cat.name}"?`))
+                                            onDeleteCategory?.(cat.name, cat.type);
+                                    }}
+                                    style={{
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        padding: 0,
+                                        color: "var(--clr-danger)",
+                                        display: "flex",
+                                        marginLeft: 2,
+                                    }}
+                                >
+                                    <X size={14} />
+                                </button>
+                            </span>
+                        ))}
+                </div>
+
+                {/* Income categories */}
+                <p style={{ fontSize: 12, fontWeight: 700, color: "var(--clr-text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Income Categories
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {INCOME_CATEGORIES.map((cat) => (
+                        <span
+                            key={cat}
+                            style={{
+                                fontSize: 12,
+                                padding: "6px 10px",
+                                borderRadius: 20,
+                                background: "rgba(16,185,129,0.08)",
+                                color: "var(--clr-text)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
+                            }}
+                        >
+                            {CATEGORY_ICONS[cat] || "📝"} {cat}
+                        </span>
+                    ))}
+                    {customCategories
+                        .filter((c) => c.type === "income")
+                        .map((cat) => (
+                            <span
+                                key={cat.name}
+                                style={{
+                                    fontSize: 12,
+                                    padding: "6px 10px",
+                                    borderRadius: 20,
+                                    background: "rgba(16,185,129,0.08)",
+                                    color: "var(--clr-text)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                    border: "1.5px dashed rgba(16,185,129,0.3)",
+                                }}
+                            >
+                                📝 {cat.name}
+                                <button
+                                    onClick={() => {
+                                        if (confirm(`Delete category "${cat.name}"?`))
+                                            onDeleteCategory?.(cat.name, cat.type);
+                                    }}
+                                    style={{
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        padding: 0,
+                                        color: "var(--clr-danger)",
+                                        display: "flex",
+                                        marginLeft: 2,
+                                    }}
+                                >
+                                    <X size={14} />
+                                </button>
+                            </span>
+                        ))}
                 </div>
             </div>
 

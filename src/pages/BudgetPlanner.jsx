@@ -50,7 +50,7 @@ function isPastMonth(key) {
   return key < current;
 }
 
-export default function BudgetPlanner({ budgetPlans, setBudgetPlans }) {
+export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCategories = [], onAddCategory }) {
   const planKeys = useMemo(() => {
     return Object.keys(budgetPlans).sort();
   }, [budgetPlans]);
@@ -118,8 +118,23 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans }) {
 
   const displayAmount = (val) => {
     const n = Number(val) || 0;
-    return n === 0 ? "" : n.toLocaleString("en-NG");
+    if (n === 0) return "";
+    return n.toLocaleString("en-NG");
   };
+
+  // State for inline add-category
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatType, setNewCatType] = useState("expense");
+
+  const allIncomeCategories = [
+    ...INCOME_CATEGORIES,
+    ...customCategories.filter((c) => c.type === "income").map((c) => c.name),
+  ];
+  const allExpenseCategories = [
+    ...EXPENSE_CATEGORIES,
+    ...customCategories.filter((c) => c.type === "expense").map((c) => c.name),
+  ];
 
   const toggleLock = () => {
     updatePlan((p) => ({ ...p, locked: !p.locked }));
@@ -493,7 +508,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans }) {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {INCOME_CATEGORIES.map((cat) => (
+          {allIncomeCategories.map((cat) => (
             <div
               key={cat}
               style={{
@@ -506,7 +521,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans }) {
                 background: "var(--clr-surface-solid)",
               }}
             >
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{CATEGORY_ICONS[cat]}</span>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>{CATEGORY_ICONS[cat] || "📝"}</span>
               <span
                 style={{
                   fontSize: 13,
@@ -568,7 +583,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans }) {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {EXPENSE_CATEGORIES.map((cat) => (
+          {allExpenseCategories.map((cat) => (
             <div
               key={cat}
               style={{
@@ -581,7 +596,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans }) {
                 background: "var(--clr-surface-solid)",
               }}
             >
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{CATEGORY_ICONS[cat]}</span>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>{CATEGORY_ICONS[cat] || "📦"}</span>
               <span
                 style={{
                   fontSize: 13,
@@ -616,6 +631,105 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans }) {
             </div>
           ))}
         </div>
+
+        {/* Add Category inline */}
+        {!isLocked && (
+          <div style={{ marginTop: 12 }}>
+            {!showAddCat ? (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowAddCat(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "var(--clr-primary)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-main)",
+                  padding: "6px 0",
+                }}
+              >
+                <Plus size={16} /> Add Category
+              </motion.button>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                style={{ display: "flex", gap: 8, alignItems: "center" }}
+              >
+                <select
+                  value={newCatType}
+                  onChange={(e) => setNewCatType(e.target.value)}
+                  style={{
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    border: "1.5px solid var(--clr-border)",
+                    background: "var(--clr-bg)",
+                    color: "var(--clr-text)",
+                    fontSize: 12,
+                    fontFamily: "var(--font-main)",
+                  }}
+                >
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Category name"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const name = newCatName.trim();
+                      if (!name) return;
+                      onAddCategory?.({ name, type: newCatType });
+                      setNewCatName("");
+                      setShowAddCat(false);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    border: "1.5px solid var(--clr-border)",
+                    background: "var(--clr-bg)",
+                    color: "var(--clr-text)",
+                    fontSize: 12,
+                    fontFamily: "var(--font-main)",
+                    minWidth: 0,
+                  }}
+                />
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    const name = newCatName.trim();
+                    if (!name) return;
+                    onAddCategory?.({ name, type: newCatType });
+                    setNewCatName("");
+                    setShowAddCat(false);
+                  }}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "var(--clr-primary)",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    fontFamily: "var(--font-main)",
+                  }}
+                >
+                  Add
+                </motion.button>
+              </motion.div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Extra-budgetary Entries (only when locked) ── */}

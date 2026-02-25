@@ -24,17 +24,22 @@ import {
 } from "../utils/calculations";
 
 export default function TaxCalculator({ taxInput, setTaxInput }) {
+    // Format number with commas for display in inputs
+    const formatWithCommas = (val) => {
+        const n = Number(val) || 0;
+        if (n === 0) return "";
+        return n.toLocaleString("en-NG");
+    };
+    // Strip commas and parse
+    const parseNum = (str) => Number(String(str).replace(/,/g, "")) || 0;
+
     const annualGrossForTax = useMemo(() => {
         const m = Number(taxInput.monthlyGross) || 0;
         const a = Number(taxInput.annualGross) || 0;
         return taxInput.periodMode === "monthly" ? m * 12 : a;
     }, [taxInput]);
 
-    const nhfBasisAmount = useMemo(() => {
-        if (taxInput.nhfBasisMode === "basic")
-            return Number(taxInput.annualBasicForNHF) || 0;
-        return annualGrossForTax;
-    }, [taxInput, annualGrossForTax]);
+    const nhfBasisAmount = annualGrossForTax;
 
     const result = useMemo(
         () =>
@@ -125,15 +130,15 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                                 : "Annual gross (₦)"}
                         </label>
                         <input
-                            type="number"
-                            min="0"
-                            value={
+                            type="text"
+                            inputMode="decimal"
+                            value={formatWithCommas(
                                 taxInput.periodMode === "monthly"
                                     ? taxInput.monthlyGross
                                     : taxInput.annualGross
-                            }
+                            )}
                             onChange={(e) => {
-                                const val = Number(e.target.value) || 0;
+                                const val = parseNum(e.target.value);
                                 setTaxInput((v) =>
                                     taxInput.periodMode === "monthly"
                                         ? { ...v, monthlyGross: val }
@@ -188,13 +193,13 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                     <div>
                         <label className="field-label">Annual rent paid (₦)</label>
                         <input
-                            type="number"
-                            min="0"
-                            value={taxInput.annualRentPaid}
+                            type="text"
+                            inputMode="decimal"
+                            value={formatWithCommas(taxInput.annualRentPaid)}
                             onChange={(e) =>
                                 setTaxInput((v) => ({
                                     ...v,
-                                    annualRentPaid: Number(e.target.value) || 0,
+                                    annualRentPaid: parseNum(e.target.value),
                                 }))
                             }
                             className="input-field"
@@ -246,7 +251,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                         </span>
                     </label>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                         <div>
                             <label className="field-label">NHF rate (%)</label>
                             <input
@@ -265,36 +270,20 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                             />
                         </div>
                         <div>
-                            <label className="field-label">NHF basis</label>
-                            <select
-                                value={taxInput.nhfBasisMode}
-                                onChange={(e) =>
-                                    setTaxInput((v) => ({ ...v, nhfBasisMode: e.target.value }))
-                                }
+                            <label className="field-label">Calculated NHF</label>
+                            <div
                                 className="input-field"
-                            >
-                                <option value="gross">Gross</option>
-                                <option value="basic">Basic</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="field-label">Annual basic</label>
-                            <input
-                                type="number"
-                                min="0"
-                                value={taxInput.annualBasicForNHF}
-                                onChange={(e) =>
-                                    setTaxInput((v) => ({
-                                        ...v,
-                                        annualBasicForNHF: Number(e.target.value) || 0,
-                                    }))
-                                }
-                                className="input-field"
-                                disabled={taxInput.nhfBasisMode !== "basic"}
                                 style={{
-                                    opacity: taxInput.nhfBasisMode !== "basic" ? 0.4 : 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    fontWeight: 600,
+                                    color: "var(--clr-primary)",
+                                    background: "rgba(99,102,241,0.06)",
+                                    cursor: "default",
                                 }}
-                            />
+                            >
+                                {taxInput.includeNHF ? formatNGN(result.nhf) : "—"}
+                            </div>
                         </div>
                     </div>
                 </div>

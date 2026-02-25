@@ -78,10 +78,12 @@ export default function App() {
         }
     }, [colorTheme]);
 
-    // Seed demo data on first load
+    // Seed demo data ONLY on first-ever visit (not on every refresh)
     useEffect(() => {
-        if (!transactions.length) {
+        const alreadySeeded = localStorage.getItem("budget-seeded");
+        if (!alreadySeeded && !transactions.length) {
             setTransactions(seedDemoTransactions());
+            localStorage.setItem("budget-seeded", "true");
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -232,6 +234,8 @@ export default function App() {
                             <BudgetPlanner
                                 budgetPlans={budgetPlans}
                                 setBudgetPlans={setBudgetPlans}
+                                customCategories={customCategories}
+                                onAddCategory={addCustomCategory}
                             />
                         </motion.div>
                     )}
@@ -254,6 +258,9 @@ export default function App() {
                                 setDarkMode={setDarkMode}
                                 colorTheme={colorTheme}
                                 setColorTheme={setColorTheme}
+                                customCategories={customCategories}
+                                onAddCategory={addCustomCategory}
+                                onDeleteCategory={deleteCustomCategory}
                             />
                         </motion.div>
                     )}
