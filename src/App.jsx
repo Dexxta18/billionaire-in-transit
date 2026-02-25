@@ -38,7 +38,7 @@ export default function App() {
     const [transactions, setTransactions] = useLocalStorage("budget-transactions", []);
     const [budgetPlans, setBudgetPlans] = useLocalStorage(
         "budget-plans",
-        createDefaultPlans()
+        {}
     );
     const [customCategories, setCustomCategories] = useLocalStorage(
         "budget-custom-categories",
@@ -50,15 +50,15 @@ export default function App() {
     );
 
     const [taxInput, setTaxInput] = useLocalStorage("budget-tax-input", {
-        monthlyGross: 850000,
+        monthlyGross: 0,
         periodMode: "monthly",
-        annualGross: 10200000,
-        pensionRate: 8,
-        includeNHF: true,
+        annualGross: 0,
+        pensionRate: 0,
+        includeNHF: false,
         nhfRate: 2.5,
         nhfBasisMode: "gross",
-        annualBasicForNHF: 6000000,
-        annualRentPaid: 2400000,
+        annualBasicForNHF: 0,
+        annualRentPaid: 0,
     });
 
     // Boot dark mode
@@ -78,15 +78,7 @@ export default function App() {
         }
     }, [colorTheme]);
 
-    // Seed demo data ONLY on first-ever visit (not on every refresh)
-    useEffect(() => {
-        const alreadySeeded = localStorage.getItem("budget-seeded");
-        if (!alreadySeeded && !transactions.length) {
-            setTransactions(seedDemoTransactions());
-            localStorage.setItem("budget-seeded", "true");
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+
 
     const addTransaction = (payload) => {
         setTransactions((prev) =>

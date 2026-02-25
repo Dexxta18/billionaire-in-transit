@@ -126,6 +126,8 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCateg
   const [showAddCat, setShowAddCat] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatType, setNewCatType] = useState("expense");
+  const [showAddCatIncome, setShowAddCatIncome] = useState(false);
+  const [newCatNameIncome, setNewCatNameIncome] = useState("");
 
   const allIncomeCategories = [
     ...INCOME_CATEGORIES,
@@ -556,6 +558,89 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCateg
             </div>
           ))}
         </div>
+
+        {/* Add Category for income */}
+        {!isLocked && (
+          <div style={{ marginTop: 12 }}>
+            {!showAddCatIncome ? (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowAddCatIncome(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "var(--clr-primary)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-main)",
+                  padding: "6px 0",
+                }}
+              >
+                <Plus size={16} /> Add Category
+              </motion.button>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                style={{ display: "flex", gap: 8, alignItems: "center" }}
+              >
+                <input
+                  type="text"
+                  placeholder="Income category name"
+                  value={newCatNameIncome}
+                  onChange={(e) => setNewCatNameIncome(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const name = newCatNameIncome.trim();
+                      if (!name) return;
+                      onAddCategory?.({ name, type: "income" });
+                      setNewCatNameIncome("");
+                      setShowAddCatIncome(false);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    border: "1.5px solid var(--clr-border)",
+                    background: "var(--clr-bg)",
+                    color: "var(--clr-text)",
+                    fontSize: 12,
+                    fontFamily: "var(--font-main)",
+                    minWidth: 0,
+                  }}
+                />
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    const name = newCatNameIncome.trim();
+                    if (!name) return;
+                    onAddCategory?.({ name, type: "income" });
+                    setNewCatNameIncome("");
+                    setShowAddCatIncome(false);
+                  }}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "var(--clr-primary)",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    fontFamily: "var(--font-main)",
+                  }}
+                >
+                  Add
+                </motion.button>
+              </motion.div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Expense Planning ── */}
