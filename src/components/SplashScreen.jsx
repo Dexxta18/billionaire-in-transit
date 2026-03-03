@@ -143,7 +143,7 @@ export default function SplashScreen({ onFinish }) {
                                 textTransform: "uppercase",
                             }}
                         >
-                            Enter
+                            Get Started
                         </motion.button>
                     </div>
                 </motion.div>

@@ -4,6 +4,7 @@ import { RefreshCw } from "lucide-react";
 
 import PullToRefresh from "./components/PullToRefresh";
 import SplashScreen from "./components/SplashScreen";
+import OnboardingScreen from "./components/OnboardingScreen";
 import BottomNav from "./components/BottomNav";
 import Dashboard from "./pages/Dashboard";
 import AddTransaction from "./pages/AddTransaction";
@@ -128,11 +129,31 @@ export default function App() {
         exit: { opacity: 0, y: -8 },
     };
 
-    // ── Splash screen ──
+    // ── Splash & onboarding ──
     const [showSplash, setShowSplash] = useState(true);
+    const [userName, setUserName] = useLocalStorage("budget-user-name", "");
+    const [showOnboarding, setShowOnboarding] = useState(false);
 
     if (showSplash) {
-        return <SplashScreen onFinish={() => setShowSplash(false)} />;
+        return (
+            <SplashScreen
+                onFinish={() => {
+                    setShowSplash(false);
+                    if (!userName) setShowOnboarding(true);
+                }}
+            />
+        );
+    }
+
+    if (showOnboarding) {
+        return (
+            <OnboardingScreen
+                onComplete={(name) => {
+                    setUserName(name);
+                    setShowOnboarding(false);
+                }}
+            />
+        );
     }
 
     return (
@@ -182,12 +203,12 @@ export default function App() {
                         </h1>
                         <p
                             style={{
-                                fontSize: 11,
+                                fontSize: 13,
                                 color: "var(--clr-text-muted)",
                                 marginTop: 2,
                             }}
                         >
-                            💰 Budget, Tax & Financial Planner
+                            {userName ? `Welcome, ${userName} 👋` : "💰 Budget, Tax & Financial Planner"}
                         </p>
                     </motion.div>
 
