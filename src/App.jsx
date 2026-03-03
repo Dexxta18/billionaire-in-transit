@@ -177,6 +177,7 @@ export default function App() {
                                 selectedMonth={selectedMonth}
                                 setSelectedMonth={setSelectedMonth}
                                 deleteTransaction={deleteTransaction}
+                                customCategories={customCategories}
                             />
                         </motion.div>
                     )}

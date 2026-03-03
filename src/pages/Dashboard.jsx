@@ -101,10 +101,22 @@ export default function Dashboard({
     selectedMonth,
     setSelectedMonth,
     deleteTransaction,
+    customCategories = [],
 }) {
     const [search, setSearch] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [viewMode, setViewMode] = useState("monthly"); // "monthly" | "quarterly" | "ytd" | "yearly"
+
+    // ── Combined categories (default + custom) ──
+    const allExpenseCategories = useMemo(() => [
+        ...EXPENSE_CATEGORIES,
+        ...customCategories.filter((c) => c.type === "expense").map((c) => c.name),
+    ], [customCategories]);
+
+    const allIncomeCategories = useMemo(() => [
+        ...INCOME_CATEGORIES,
+        ...customCategories.filter((c) => c.type === "income").map((c) => c.name),
+    ], [customCategories]);
 
     const plan = budgetPlans?.[selectedMonth];
 
@@ -141,21 +153,21 @@ export default function Dashboard({
     // ── Actual totals by category (scope) ──
     const actualIncomeByCat = useMemo(() => {
         const map = {};
-        INCOME_CATEGORIES.forEach((c) => (map[c] = 0));
+        allIncomeCategories.forEach((c) => (map[c] = 0));
         scopeTransactions
             .filter((t) => t.type === "income")
             .forEach((t) => (map[t.category] = (map[t.category] || 0) + Number(t.amount)));
         return map;
-    }, [scopeTransactions]);
+    }, [scopeTransactions, allIncomeCategories]);
 
     const actualExpenseByCat = useMemo(() => {
         const map = {};
-        EXPENSE_CATEGORIES.forEach((c) => (map[c] = 0));
+        allExpenseCategories.forEach((c) => (map[c] = 0));
         scopeTransactions
             .filter((t) => t.type === "expense")
             .forEach((t) => (map[t.category] = (map[t.category] || 0) + Number(t.amount)));
         return map;
-    }, [scopeTransactions]);
+    }, [scopeTransactions, allExpenseCategories]);
 
     const totalActualIncome = Object.values(actualIncomeByCat).reduce((s, v) => s + v, 0);
     const totalActualExpense = Object.values(actualExpenseByCat).reduce((s, v) => s + v, 0);
@@ -163,9 +175,9 @@ export default function Dashboard({
     // ── Planned totals (aggregate across scope) ──
     const { totalPlannedIncome, totalPlannedExpense, plannedIncomeByCat, plannedExpenseByCat } = useMemo(() => {
         const incCat = {};
-        INCOME_CATEGORIES.forEach((c) => (incCat[c] = 0));
+        allIncomeCategories.forEach((c) => (incCat[c] = 0));
         const expCat = {};
-        EXPENSE_CATEGORIES.forEach((c) => (expCat[c] = 0));
+        allExpenseCategories.forEach((c) => (expCat[c] = 0));
         let pInc = 0;
         let pExp = 0;
 
@@ -195,21 +207,21 @@ export default function Dashboard({
             plannedIncomeByCat: incCat,
             plannedExpenseByCat: expCat,
         };
-    }, [scopeMonths, budgetPlans]);
+    }, [scopeMonths, budgetPlans, allIncomeCategories, allExpenseCategories]);
 
     const netActual = totalActualIncome - totalActualExpense;
 
     // ── Budget vs Actual data for bar chart ──
     const budgetVsActualExpense = useMemo(
         () =>
-            EXPENSE_CATEGORIES.filter(
+            allExpenseCategories.filter(
                 (cat) => (plannedExpenseByCat[cat] || 0) > 0 || (actualExpenseByCat[cat] || 0) > 0
             ).map((cat) => ({
                 name: cat,
                 Planned: plannedExpenseByCat[cat] || 0,
                 Actual: actualExpenseByCat[cat] || 0,
             })),
-        [plannedExpenseByCat, actualExpenseByCat]
+        [plannedExpenseByCat, actualExpenseByCat, allExpenseCategories]
     );
 
     // ── Pie chart data — top-4 + Others ──
@@ -667,7 +679,7 @@ export default function Dashboard({
                     <p className="section-title" style={{ fontSize: 15, marginBottom: 12 }}>
                         Income: Budget vs Actual
                     </p>
-                    {INCOME_CATEGORIES.filter(
+                    {allIncomeCategories.filter(
                         (cat) =>
                             (plannedIncomeByCat[cat] || 0) > 0 || (actualIncomeByCat[cat] || 0) > 0
                     ).map((cat) => (
@@ -678,7 +690,7 @@ export default function Dashboard({
                             actual={actualIncomeByCat[cat] || 0}
                         />
                     ))}
-                    {INCOME_CATEGORIES.filter(
+                    {allIncomeCategories.filter(
                         (cat) =>
                             (plannedIncomeByCat[cat] || 0) > 0 || (actualIncomeByCat[cat] || 0) > 0
                     ).length === 0 && (
