@@ -102,10 +102,14 @@ export default function Dashboard({
     setSelectedMonth,
     deleteTransaction,
     customCategories = [],
+    hideAmounts = false,
 }) {
     const [search, setSearch] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [viewMode, setViewMode] = useState("monthly"); // "monthly" | "quarterly" | "ytd" | "yearly"
+
+    // ── Privacy mask helper ──
+    const mask = (val) => (hideAmounts ? "••••••" : val);
 
     // ── Combined categories (default + custom) ──
     const allExpenseCategories = useMemo(() => [
@@ -267,6 +271,10 @@ export default function Dashboard({
         const variance = planned - actual;
         const pct = planned > 0 ? Math.min((actual / planned) * 100, 150) : actual > 0 ? 100 : 0;
         const over = actual > planned && planned > 0;
+        const unbudgeted = planned === 0 && actual > 0;
+        // Color: red if over budget OR unbudgeted expense, green otherwise
+        const varianceColor = (over || unbudgeted) ? "var(--clr-danger)" : "var(--clr-success)";
+        const barColor = (over || unbudgeted) ? "var(--clr-danger)" : "var(--clr-primary)";
         return (
             <div
                 style={{
@@ -277,7 +285,7 @@ export default function Dashboard({
                     borderBottom: "1px solid var(--clr-border)",
                 }}
             >
-                <span style={{ fontSize: 16, flexShrink: 0 }}>{CATEGORY_ICONS[cat]}</span>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>{CATEGORY_ICONS[cat] || "📦"}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                         style={{
@@ -301,12 +309,11 @@ export default function Dashboard({
                         <span
                             style={{
                                 fontWeight: 600,
-                                color: over ? "var(--clr-danger)" : "var(--clr-success)",
+                                color: varianceColor,
                                 whiteSpace: "nowrap",
                             }}
                         >
-                            {over ? "+" : ""}
-                            {formatNGN(Math.abs(variance))}
+                            {mask(<>{over ? "+" : ""}{formatNGN(Math.abs(variance))}</>)}
                         </span>
                     </div>
                     <div
@@ -324,7 +331,7 @@ export default function Dashboard({
                             style={{
                                 height: "100%",
                                 borderRadius: 3,
-                                background: over ? "var(--clr-danger)" : "var(--clr-primary)",
+                                background: barColor,
                             }}
                         />
                     </div>
@@ -337,8 +344,8 @@ export default function Dashboard({
                             marginTop: 3,
                         }}
                     >
-                        <span>{formatNGN(actual)} actual</span>
-                        <span>{formatNGN(planned)} planned</span>
+                        <span>{mask(formatNGN(actual))} actual</span>
+                        <span>{mask(formatNGN(planned))} planned</span>
                     </div>
                 </div>
             </div>
@@ -350,6 +357,10 @@ export default function Dashboard({
         const variance = actual - planned;
         const pct = planned > 0 ? Math.min((actual / planned) * 100, 150) : actual > 0 ? 100 : 0;
         const under = actual < planned && planned > 0;
+        const unbudgeted = planned === 0 && actual > 0;
+        // Color: green if unbudgeted income (extra income is good), red if under target
+        const varianceColor = unbudgeted ? "var(--clr-success)" : (under ? "var(--clr-danger)" : "var(--clr-success)");
+        const barColor = under ? "var(--clr-danger)" : "var(--clr-success)";
         return (
             <div
                 style={{
@@ -360,7 +371,7 @@ export default function Dashboard({
                     borderBottom: "1px solid var(--clr-border)",
                 }}
             >
-                <span style={{ fontSize: 16, flexShrink: 0 }}>{CATEGORY_ICONS[cat]}</span>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>{CATEGORY_ICONS[cat] || "📝"}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                         style={{
@@ -384,12 +395,11 @@ export default function Dashboard({
                         <span
                             style={{
                                 fontWeight: 600,
-                                color: under ? "var(--clr-danger)" : "var(--clr-success)",
+                                color: varianceColor,
                                 whiteSpace: "nowrap",
                             }}
                         >
-                            {variance >= 0 ? "+" : ""}
-                            {formatNGN(Math.abs(variance))}
+                            {mask(<>{variance >= 0 ? "+" : ""}{formatNGN(Math.abs(variance))}</>)}
                         </span>
                     </div>
                     <div
@@ -407,7 +417,7 @@ export default function Dashboard({
                             style={{
                                 height: "100%",
                                 borderRadius: 3,
-                                background: under ? "var(--clr-danger)" : "var(--clr-success)",
+                                background: barColor,
                             }}
                         />
                     </div>
@@ -420,8 +430,8 @@ export default function Dashboard({
                             marginTop: 3,
                         }}
                     >
-                        <span>{formatNGN(actual)} actual</span>
-                        <span>{formatNGN(planned)} planned</span>
+                        <span>{mask(formatNGN(actual))} actual</span>
+                        <span>{mask(formatNGN(planned))} planned</span>
                     </div>
                 </div>
             </div>
@@ -548,6 +558,7 @@ export default function Dashboard({
                     gradient="grad-net"
                     hint={hasPlan ? "Budget target" : "No plan set"}
                     delay={0}
+                    hideAmounts={hideAmounts}
                 />
                 <MetricCard
                     title="Actual Income"
@@ -560,6 +571,7 @@ export default function Dashboard({
                             : "—"
                     }
                     delay={0.05}
+                    hideAmounts={hideAmounts}
                 />
                 <MetricCard
                     title="Planned Expense"
@@ -567,6 +579,7 @@ export default function Dashboard({
                     icon={Target}
                     hint={hasPlan ? "Budget target" : "No plan set"}
                     delay={0.1}
+                    hideAmounts={hideAmounts}
                 />
                 <MetricCard
                     title="Actual Expense"
@@ -579,6 +592,7 @@ export default function Dashboard({
                             : "—"
                     }
                     delay={0.15}
+                    hideAmounts={hideAmounts}
                 />
             </div>
 
@@ -616,7 +630,7 @@ export default function Dashboard({
                         color: netActual >= 0 ? "var(--clr-success)" : "var(--clr-danger)",
                     }}
                 >
-                    {formatNGN(netActual)}
+                    {mask(formatNGN(netActual))}
                 </span>
             </motion.div>
 
@@ -652,7 +666,7 @@ export default function Dashboard({
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value) => formatNGN(Number(value))}
+                                    formatter={(value) => hideAmounts ? "••••••" : formatNGN(Number(value))}
                                     contentStyle={{
                                         borderRadius: 12,
                                         border: "1px solid var(--clr-border)",
@@ -805,6 +819,7 @@ export default function Dashboard({
                                 key={t.id}
                                 transaction={t}
                                 onDelete={deleteTransaction}
+                                hideAmounts={hideAmounts}
                             />
                         ))}
                     </div>

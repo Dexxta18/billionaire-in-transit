@@ -8,7 +8,9 @@ export default function MetricCard({
     icon: Icon,
     gradient,
     delay = 0,
+    hideAmounts = false,
 }) {
+    const displayValue = hideAmounts ? "••••••" : value;
     return (
         <motion.div
             initial={{ opacity: 0, y: 16, scale: 0.95 }}
@@ -99,7 +101,7 @@ export default function MetricCard({
                         color: gradient ? "white" : "var(--clr-text)",
                     }}
                 >
-                    {value}
+                    {displayValue}
                 </p>
                 {hint && (
                     <p

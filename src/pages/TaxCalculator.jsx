@@ -23,7 +23,8 @@ import {
     calculateNewNigeriaTaxActPIT,
 } from "../utils/calculations";
 
-export default function TaxCalculator({ taxInput, setTaxInput }) {
+export default function TaxCalculator({ taxInput, setTaxInput, hideAmounts = false }) {
+    const mask = (val) => (hideAmounts ? "••••••" : val);
     // Format a raw input string: add commas to integer part, keep decimal as-is
     const formatWithCommas = (raw) => {
         let str = String(raw).replace(/[^\d.]/g, "");
@@ -178,7 +179,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                         Annual gross for computation
                     </span>
                     <span style={{ fontWeight: 700, color: "var(--clr-primary)" }}>
-                        {formatNGN(annualGrossForTax)}
+                        {mask(formatNGN(annualGrossForTax))}
                     </span>
                 </div>
 
@@ -295,7 +296,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                                     cursor: "default",
                                 }}
                             >
-                                {taxInput.includeNHF ? formatNGN(result.nhf) : "—"}
+                                {taxInput.includeNHF ? mask(formatNGN(result.nhf)) : "—"}
                             </div>
                         </div>
                     </div>
@@ -317,6 +318,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                     gradient="grad-expense"
                     hint={`${(result.effectiveRate * 100).toFixed(2)}% effective`}
                     delay={0}
+                    hideAmounts={hideAmounts}
                 />
                 <MetricCard
                     title="Monthly Tax"
@@ -324,6 +326,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                     icon={Calculator}
                     hint="Deducted from pay"
                     delay={0.05}
+                    hideAmounts={hideAmounts}
                 />
                 <MetricCard
                     title="Net Annual"
@@ -331,6 +334,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                     icon={Wallet}
                     gradient="grad-income"
                     delay={0.1}
+                    hideAmounts={hideAmounts}
                 />
                 <MetricCard
                     title="Net Monthly"
@@ -339,6 +343,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                     gradient="grad-net"
                     hint="Take-home pay"
                     delay={0.15}
+                    hideAmounts={hideAmounts}
                 />
             </div>
 
@@ -379,7 +384,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                                         color: isBold ? "var(--clr-text)" : "var(--clr-text-secondary)",
                                     }}
                                 >
-                                    {formatNGN(val)}
+                                    {mask(formatNGN(val))}
                                 </span>
                             </div>
                         );
@@ -432,7 +437,7 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                                 tick={{ fontSize: 11 }}
                             />
                             <Tooltip
-                                formatter={(value) => formatNGN(Number(value))}
+                                formatter={(value) => hideAmounts ? "••••••" : formatNGN(Number(value))}
                                 contentStyle={{
                                     borderRadius: 12,
                                     border: "1px solid var(--clr-border)",

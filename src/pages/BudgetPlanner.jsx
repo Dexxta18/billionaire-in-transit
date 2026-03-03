@@ -50,7 +50,8 @@ function isPastMonth(key) {
   return key < current;
 }
 
-export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCategories = [], onAddCategory }) {
+export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCategories = [], onAddCategory, hideAmounts = false }) {
+  const mask = (val) => (hideAmounts ? "••••••" : val);
   const planKeys = useMemo(() => {
     return Object.keys(budgetPlans).sort();
   }, [budgetPlans]);
@@ -442,10 +443,10 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCateg
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
             <span style={{ color: "var(--clr-success)", fontWeight: 600 }}>
-              Income: {formatNGN(totalPlannedIncome + extrasIncome)}
+              Income: {mask(formatNGN(totalPlannedIncome + extrasIncome))}
             </span>
             <span style={{ color: "var(--clr-danger)", fontWeight: 600 }}>
-              Expense: {formatNGN(totalPlannedExpense + extrasExpense)}
+              Expense: {mask(formatNGN(totalPlannedExpense + extrasExpense))}
             </span>
             <span
               style={{
@@ -453,7 +454,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCateg
                 fontWeight: 700,
               }}
             >
-              {surplus >= 0 ? "Surplus" : "Deficit"}: {formatNGN(Math.abs(surplus))}
+              {surplus >= 0 ? "Surplus" : "Deficit"}: {mask(formatNGN(Math.abs(surplus)))}
             </span>
           </div>
           {isPast && (
@@ -505,7 +506,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCateg
           <span
             style={{ marginLeft: "auto", fontSize: 14, fontWeight: 700, color: "var(--clr-success)" }}
           >
-            {formatNGN(totalPlannedIncome)}
+            {mask(formatNGN(totalPlannedIncome))}
           </span>
         </div>
 
@@ -663,7 +664,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCateg
           <span
             style={{ marginLeft: "auto", fontSize: 14, fontWeight: 700, color: "var(--clr-danger)" }}
           >
-            {formatNGN(totalPlannedExpense)}
+            {mask(formatNGN(totalPlannedExpense))}
           </span>
         </div>
 
@@ -881,7 +882,7 @@ export default function BudgetPlanner({ budgetPlans, setBudgetPlans, customCateg
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {formatNGN(extra.amount)}
+                    {mask(formatNGN(extra.amount))}
                   </span>
                   <motion.button
                     whileTap={{ scale: 0.85 }}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 
 import BottomNav from "./components/BottomNav";
 import Dashboard from "./pages/Dashboard";
@@ -44,6 +45,7 @@ export default function App() {
         "budget-custom-categories",
         []
     );
+    const [hideAmounts, setHideAmounts] = useLocalStorage("budget-hide-amounts", false);
     const [activeTab, setActiveTab] = useState("dashboard");
     const [selectedMonth, setSelectedMonth] = useState(
         new Date().toISOString().slice(0, 7)
@@ -131,33 +133,61 @@ export default function App() {
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     style={{
-                        textAlign: "center",
                         padding: "12px 0 8px",
                         marginBottom: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "relative",
                     }}
                 >
-                    <h1
+                    <div style={{ textAlign: "center" }}>
+                        <h1
+                            style={{
+                                fontSize: 20,
+                                fontWeight: 800,
+                                letterSpacing: "-0.03em",
+                                background: "var(--grad-hero)",
+                                WebkitBackgroundClip: "text",
+                                WebkitTextFillColor: "transparent",
+                                backgroundClip: "text",
+                            }}
+                        >
+                            Billionaire in Transit
+                        </h1>
+                        <p
+                            style={{
+                                fontSize: 11,
+                                color: "var(--clr-text-muted)",
+                                marginTop: 2,
+                            }}
+                        >
+                            💰 Budget, Tax & Financial Planner
+                        </p>
+                    </div>
+                    <motion.button
+                        whileTap={{ scale: 0.85 }}
+                        onClick={() => setHideAmounts((v) => !v)}
+                        aria-label={hideAmounts ? "Show amounts" : "Hide amounts"}
                         style={{
-                            fontSize: 20,
-                            fontWeight: 800,
-                            letterSpacing: "-0.03em",
-                            background: "var(--grad-hero)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            backgroundClip: "text",
+                            position: "absolute",
+                            right: 0,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            width: 38,
+                            height: 38,
+                            borderRadius: "50%",
+                            border: "1.5px solid var(--clr-border)",
+                            background: hideAmounts ? "rgba(99, 102, 241, 0.1)" : "var(--clr-surface-solid)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            color: hideAmounts ? "var(--clr-primary)" : "var(--clr-text-muted)",
                         }}
                     >
-                        Billionaire in Transit
-                    </h1>
-                    <p
-                        style={{
-                            fontSize: 11,
-                            color: "var(--clr-text-muted)",
-                            marginTop: 2,
-                        }}
-                    >
-                        💰 Budget, Tax & Financial Planner
-                    </p>
+                        {hideAmounts ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </motion.button>
                 </motion.div>
 
                 {/* Page Content */}
@@ -178,6 +208,7 @@ export default function App() {
                                 setSelectedMonth={setSelectedMonth}
                                 deleteTransaction={deleteTransaction}
                                 customCategories={customCategories}
+                                hideAmounts={hideAmounts}
                             />
                         </motion.div>
                     )}
@@ -198,6 +229,7 @@ export default function App() {
                                 onAddCategory={addCustomCategory}
                                 onDeleteCategory={deleteCustomCategory}
                                 transactions={transactions}
+                                hideAmounts={hideAmounts}
                             />
                         </motion.div>
                     )}
@@ -211,7 +243,7 @@ export default function App() {
                             exit="exit"
                             transition={{ duration: 0.25 }}
                         >
-                            <TaxCalculator taxInput={taxInput} setTaxInput={setTaxInput} />
+                            <TaxCalculator taxInput={taxInput} setTaxInput={setTaxInput} hideAmounts={hideAmounts} />
                         </motion.div>
                     )}
 
@@ -229,6 +261,7 @@ export default function App() {
                                 setBudgetPlans={setBudgetPlans}
                                 customCategories={customCategories}
                                 onAddCategory={addCustomCategory}
+                                hideAmounts={hideAmounts}
                             />
                         </motion.div>
                     )}

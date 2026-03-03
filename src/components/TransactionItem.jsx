@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Trash2, Repeat } from "lucide-react";
 import { formatNGN, CATEGORY_ICONS } from "../utils/calculations";
 
-export default function TransactionItem({ transaction, onDelete, delay = 0 }) {
+export default function TransactionItem({ transaction, onDelete, delay = 0, hideAmounts = false }) {
     const t = transaction;
     const isIncome = t.type === "income";
 
@@ -126,7 +126,7 @@ export default function TransactionItem({ transaction, onDelete, delay = 0 }) {
                     }}
                 >
                     {isIncome ? "+" : "−"}
-                    {formatNGN(Number(t.amount || 0)).replace("NGN", "₦")}
+                    {hideAmounts ? "••••••" : formatNGN(Number(t.amount || 0)).replace("NGN", "₦")}
                 </span>
                 <motion.button
                     whileTap={{ scale: 0.85 }}
