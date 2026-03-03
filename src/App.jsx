@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
+import PullToRefresh from "./components/PullToRefresh";
 import BottomNav from "./components/BottomNav";
 import Dashboard from "./pages/Dashboard";
 import AddTransaction from "./pages/AddTransaction";
@@ -45,7 +46,6 @@ export default function App() {
         "budget-custom-categories",
         []
     );
-    const [hideAmounts, setHideAmounts] = useLocalStorage("budget-hide-amounts", false);
     const [activeTab, setActiveTab] = useState("dashboard");
     const [selectedMonth, setSelectedMonth] = useState(
         new Date().toISOString().slice(0, 7)
@@ -101,6 +101,26 @@ export default function App() {
         );
     };
 
+    // ── SW update listener ──
+    const [updateAvailable, setUpdateAvailable] = useState(false);
+    const updateFnRef = React.useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => {
+            setUpdateAvailable(true);
+            updateFnRef.current = e.detail?.updateSW;
+        };
+        window.addEventListener("sw-update-available", handler);
+        return () => window.removeEventListener("sw-update-available", handler);
+    }, []);
+
+    const applyUpdate = useCallback(() => {
+        if (updateFnRef.current) {
+            updateFnRef.current(true);
+        }
+        window.location.reload();
+    }, []);
+
     const pageVariants = {
         initial: { opacity: 0, y: 16 },
         animate: { opacity: 1, y: 0 },
@@ -108,40 +128,37 @@ export default function App() {
     };
 
     return (
-        <div
-            style={{
-                minHeight: "100dvh",
-                display: "flex",
-                flexDirection: "column",
-                background: "var(--clr-bg)",
-            }}
-        >
-            {/* Main scrollable content */}
-            <main
+        <PullToRefresh>
+            <div
                 style={{
-                    flex: 1,
-                    padding:
-                        "16px 16px calc(var(--bottom-nav-h) + var(--safe-bottom) + 16px)",
-                    maxWidth: 600,
-                    margin: "0 auto",
-                    width: "100%",
-                    overflowY: "auto",
+                    minHeight: "100dvh",
+                    display: "flex",
+                    flexDirection: "column",
+                    background: "var(--clr-bg)",
                 }}
             >
-                {/* App Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
+                {/* Main scrollable content */}
+                <main
                     style={{
-                        padding: "12px 0 8px",
-                        marginBottom: 8,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        position: "relative",
+                        flex: 1,
+                        padding:
+                            "16px 16px calc(var(--bottom-nav-h) + var(--safe-bottom) + 16px)",
+                        maxWidth: 600,
+                        margin: "0 auto",
+                        width: "100%",
+                        overflowY: "auto",
                     }}
                 >
-                    <div style={{ textAlign: "center" }}>
+                    {/* App Header */}
+                    <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        style={{
+                            textAlign: "center",
+                            padding: "12px 0 8px",
+                            marginBottom: 8,
+                        }}
+                    >
                         <h1
                             style={{
                                 fontSize: 20,
@@ -164,137 +181,147 @@ export default function App() {
                         >
                             💰 Budget, Tax & Financial Planner
                         </p>
-                    </div>
-                    <motion.button
-                        whileTap={{ scale: 0.85 }}
-                        onClick={() => setHideAmounts((v) => !v)}
-                        aria-label={hideAmounts ? "Show amounts" : "Hide amounts"}
-                        style={{
-                            position: "absolute",
-                            right: 0,
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            width: 38,
-                            height: 38,
-                            borderRadius: "50%",
-                            border: "1.5px solid var(--clr-border)",
-                            background: hideAmounts ? "rgba(99, 102, 241, 0.1)" : "var(--clr-surface-solid)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            color: hideAmounts ? "var(--clr-primary)" : "var(--clr-text-muted)",
-                        }}
-                    >
-                        {hideAmounts ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </motion.button>
-                </motion.div>
+                    </motion.div>
 
-                {/* Page Content */}
-                <AnimatePresence mode="wait">
-                    {activeTab === "dashboard" && (
-                        <motion.div
-                            key="dashboard"
-                            variants={pageVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            transition={{ duration: 0.25 }}
-                        >
-                            <Dashboard
-                                transactions={transactions}
-                                budgetPlans={budgetPlans}
-                                selectedMonth={selectedMonth}
-                                setSelectedMonth={setSelectedMonth}
-                                deleteTransaction={deleteTransaction}
-                                customCategories={customCategories}
-                                hideAmounts={hideAmounts}
-                            />
-                        </motion.div>
-                    )}
+                    {/* Page Content */}
+                    <AnimatePresence mode="wait">
+                        {activeTab === "dashboard" && (
+                            <motion.div
+                                key="dashboard"
+                                variants={pageVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                            >
+                                <Dashboard
+                                    transactions={transactions}
+                                    budgetPlans={budgetPlans}
+                                    selectedMonth={selectedMonth}
+                                    setSelectedMonth={setSelectedMonth}
+                                    deleteTransaction={deleteTransaction}
+                                    customCategories={customCategories}
+                                />
+                            </motion.div>
+                        )}
 
-                    {activeTab === "add" && (
-                        <motion.div
-                            key="add"
-                            variants={pageVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            transition={{ duration: 0.25 }}
-                        >
-                            <AddTransaction
-                                onAdd={addTransaction}
-                                setSelectedMonth={setSelectedMonth}
-                                customCategories={customCategories}
-                                onAddCategory={addCustomCategory}
-                                onDeleteCategory={deleteCustomCategory}
-                                transactions={transactions}
-                                hideAmounts={hideAmounts}
-                            />
-                        </motion.div>
-                    )}
+                        {activeTab === "add" && (
+                            <motion.div
+                                key="add"
+                                variants={pageVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                            >
+                                <AddTransaction
+                                    onAdd={addTransaction}
+                                    setSelectedMonth={setSelectedMonth}
+                                    customCategories={customCategories}
+                                    onAddCategory={addCustomCategory}
+                                    onDeleteCategory={deleteCustomCategory}
+                                    transactions={transactions}
+                                />
+                            </motion.div>
+                        )}
 
-                    {activeTab === "tax" && (
-                        <motion.div
-                            key="tax"
-                            variants={pageVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            transition={{ duration: 0.25 }}
-                        >
-                            <TaxCalculator taxInput={taxInput} setTaxInput={setTaxInput} hideAmounts={hideAmounts} />
-                        </motion.div>
-                    )}
+                        {activeTab === "tax" && (
+                            <motion.div
+                                key="tax"
+                                variants={pageVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                            >
+                                <TaxCalculator taxInput={taxInput} setTaxInput={setTaxInput} />
+                            </motion.div>
+                        )}
 
-                    {activeTab === "budget" && (
-                        <motion.div
-                            key="budget"
-                            variants={pageVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            transition={{ duration: 0.25 }}
-                        >
-                            <BudgetPlanner
-                                budgetPlans={budgetPlans}
-                                setBudgetPlans={setBudgetPlans}
-                                customCategories={customCategories}
-                                onAddCategory={addCustomCategory}
-                                hideAmounts={hideAmounts}
-                            />
-                        </motion.div>
-                    )}
+                        {activeTab === "budget" && (
+                            <motion.div
+                                key="budget"
+                                variants={pageVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                            >
+                                <BudgetPlanner
+                                    budgetPlans={budgetPlans}
+                                    setBudgetPlans={setBudgetPlans}
+                                    customCategories={customCategories}
+                                    onAddCategory={addCustomCategory}
+                                />
+                            </motion.div>
+                        )}
 
-                    {activeTab === "settings" && (
+                        {activeTab === "settings" && (
+                            <motion.div
+                                key="settings"
+                                variants={pageVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                            >
+                                <SettingsPage
+                                    transactions={transactions}
+                                    setTransactions={setTransactions}
+                                    budgetPlans={budgetPlans}
+                                    setBudgetPlans={setBudgetPlans}
+                                    darkMode={darkMode}
+                                    setDarkMode={setDarkMode}
+                                    colorTheme={colorTheme}
+                                    setColorTheme={setColorTheme}
+                                    customCategories={customCategories}
+                                    onAddCategory={addCustomCategory}
+                                    onDeleteCategory={deleteCustomCategory}
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </main>
+
+                {/* Bottom Navigation */}
+                <BottomNav active={activeTab} onChange={setActiveTab} />
+
+                {/* SW update banner */}
+                <AnimatePresence>
+                    {updateAvailable && (
                         <motion.div
-                            key="settings"
-                            variants={pageVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            transition={{ duration: 0.25 }}
+                            initial={{ opacity: 0, y: 60 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 60 }}
+                            onClick={applyUpdate}
+                            style={{
+                                position: "fixed",
+                                bottom: "calc(var(--bottom-nav-h) + var(--safe-bottom) + 8px)",
+                                left: 16,
+                                right: 16,
+                                maxWidth: 600,
+                                margin: "0 auto",
+                                padding: "12px 16px",
+                                borderRadius: "var(--radius-md)",
+                                background: "var(--clr-primary)",
+                                color: "white",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 8,
+                                fontWeight: 600,
+                                fontSize: 13,
+                                cursor: "pointer",
+                                boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+                                zIndex: 9999,
+                            }}
                         >
-                            <SettingsPage
-                                transactions={transactions}
-                                setTransactions={setTransactions}
-                                budgetPlans={budgetPlans}
-                                setBudgetPlans={setBudgetPlans}
-                                darkMode={darkMode}
-                                setDarkMode={setDarkMode}
-                                colorTheme={colorTheme}
-                                setColorTheme={setColorTheme}
-                                customCategories={customCategories}
-                                onAddCategory={addCustomCategory}
-                                onDeleteCategory={deleteCustomCategory}
-                            />
+                            <RefreshCw size={16} />
+                            Update available — tap to refresh
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </main>
-
-            {/* Bottom Navigation */}
-            <BottomNav active={activeTab} onChange={setActiveTab} />
-        </div>
+            </div>
+        </PullToRefresh>
     );
 }

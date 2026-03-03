@@ -16,6 +16,8 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 
 import MetricCard from "../components/MetricCard";
@@ -27,6 +29,7 @@ import {
     EXPENSE_CATEGORIES,
     INCOME_CATEGORIES,
     CHART_COLORS,
+    useLocalStorage,
 } from "../utils/calculations";
 
 const MONTH_LABELS = [
@@ -102,14 +105,19 @@ export default function Dashboard({
     setSelectedMonth,
     deleteTransaction,
     customCategories = [],
-    hideAmounts = false,
 }) {
     const [search, setSearch] = useState("");
     const [filterType, setFilterType] = useState("all");
-    const [viewMode, setViewMode] = useState("monthly"); // "monthly" | "quarterly" | "ytd" | "yearly"
+    const [viewMode, setViewMode] = useState("monthly");
 
-    // ── Privacy mask helper ──
-    const mask = (val) => (hideAmounts ? "••••••" : val);
+    // ── Per-section privacy toggles ──
+    const [hideMetrics, setHideMetrics] = useLocalStorage("budget-hide-metrics", false);
+    const [hideBudgetVsActual, setHideBudgetVsActual] = useLocalStorage("budget-hide-bva", false);
+    const [hideTransactions, setHideTransactions] = useLocalStorage("budget-hide-txns", false);
+
+    // Mask helpers per section
+    const maskMetrics = (val) => (hideMetrics ? "••••••" : val);
+    const maskBva = (val) => (hideBudgetVsActual ? "••••••" : val);
 
     // ── Combined categories (default + custom) ──
     const allExpenseCategories = useMemo(() => [
@@ -313,7 +321,7 @@ export default function Dashboard({
                                 whiteSpace: "nowrap",
                             }}
                         >
-                            {mask(<>{over ? "+" : ""}{formatNGN(Math.abs(variance))}</>)}
+                            {maskBva(<>{over ? "+" : ""}{formatNGN(Math.abs(variance))}</>)}
                         </span>
                     </div>
                     <div
@@ -344,8 +352,8 @@ export default function Dashboard({
                             marginTop: 3,
                         }}
                     >
-                        <span>{mask(formatNGN(actual))} actual</span>
-                        <span>{mask(formatNGN(planned))} planned</span>
+                        <span>{maskBva(formatNGN(actual))} actual</span>
+                        <span>{maskBva(formatNGN(planned))} planned</span>
                     </div>
                 </div>
             </div>
@@ -399,7 +407,7 @@ export default function Dashboard({
                                 whiteSpace: "nowrap",
                             }}
                         >
-                            {mask(<>{variance >= 0 ? "+" : ""}{formatNGN(Math.abs(variance))}</>)}
+                            {maskBva(<>{variance >= 0 ? "+" : ""}{formatNGN(Math.abs(variance))}</>)}
                         </span>
                     </div>
                     <div
@@ -430,8 +438,8 @@ export default function Dashboard({
                             marginTop: 3,
                         }}
                     >
-                        <span>{mask(formatNGN(actual))} actual</span>
-                        <span>{mask(formatNGN(planned))} planned</span>
+                        <span>{maskBva(formatNGN(actual))} actual</span>
+                        <span>{maskBva(formatNGN(planned))} planned</span>
                     </div>
                 </div>
             </div>
@@ -544,6 +552,24 @@ export default function Dashboard({
             </div>
 
             {/* ── Summary Cards ── */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <p className="section-title" style={{ fontSize: 15, margin: 0 }}>Overview</p>
+                <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => setHideMetrics((v) => !v)}
+                    aria-label={hideMetrics ? "Show metrics" : "Hide metrics"}
+                    style={{
+                        width: 30, height: 30, borderRadius: "50%",
+                        border: "1.5px solid var(--clr-border)",
+                        background: hideMetrics ? "rgba(99,102,241,0.1)" : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        cursor: "pointer",
+                        color: hideMetrics ? "var(--clr-primary)" : "var(--clr-text-muted)",
+                    }}
+                >
+                    {hideMetrics ? <EyeOff size={14} /> : <Eye size={14} />}
+                </motion.button>
+            </div>
             <div
                 style={{
                     display: "grid",
@@ -558,7 +584,7 @@ export default function Dashboard({
                     gradient="grad-net"
                     hint={hasPlan ? "Budget target" : "No plan set"}
                     delay={0}
-                    hideAmounts={hideAmounts}
+                    hideAmounts={hideMetrics}
                 />
                 <MetricCard
                     title="Actual Income"
@@ -571,7 +597,7 @@ export default function Dashboard({
                             : "—"
                     }
                     delay={0.05}
-                    hideAmounts={hideAmounts}
+                    hideAmounts={hideMetrics}
                 />
                 <MetricCard
                     title="Planned Expense"
@@ -579,7 +605,7 @@ export default function Dashboard({
                     icon={Target}
                     hint={hasPlan ? "Budget target" : "No plan set"}
                     delay={0.1}
-                    hideAmounts={hideAmounts}
+                    hideAmounts={hideMetrics}
                 />
                 <MetricCard
                     title="Actual Expense"
@@ -592,7 +618,7 @@ export default function Dashboard({
                             : "—"
                     }
                     delay={0.15}
-                    hideAmounts={hideAmounts}
+                    hideAmounts={hideMetrics}
                 />
             </div>
 
@@ -630,7 +656,7 @@ export default function Dashboard({
                         color: netActual >= 0 ? "var(--clr-success)" : "var(--clr-danger)",
                     }}
                 >
-                    {mask(formatNGN(netActual))}
+                    {maskMetrics(formatNGN(netActual))}
                 </span>
             </motion.div>
 
@@ -666,7 +692,7 @@ export default function Dashboard({
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value) => hideAmounts ? "••••••" : formatNGN(Number(value))}
+                                    formatter={(value) => hideMetrics ? "••••••" : formatNGN(Number(value))}
                                     contentStyle={{
                                         borderRadius: 12,
                                         border: "1px solid var(--clr-border)",
@@ -690,9 +716,26 @@ export default function Dashboard({
                     className="glass-card"
                     style={{ padding: 18, borderRadius: "var(--radius-md)" }}
                 >
-                    <p className="section-title" style={{ fontSize: 15, marginBottom: 12 }}>
-                        Income: Budget vs Actual
-                    </p>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                        <p className="section-title" style={{ fontSize: 15, margin: 0 }}>
+                            Income: Budget vs Actual
+                        </p>
+                        <motion.button
+                            whileTap={{ scale: 0.85 }}
+                            onClick={() => setHideBudgetVsActual((v) => !v)}
+                            aria-label={hideBudgetVsActual ? "Show budget vs actual" : "Hide budget vs actual"}
+                            style={{
+                                width: 30, height: 30, borderRadius: "50%",
+                                border: "1.5px solid var(--clr-border)",
+                                background: hideBudgetVsActual ? "rgba(99,102,241,0.1)" : "transparent",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                cursor: "pointer",
+                                color: hideBudgetVsActual ? "var(--clr-primary)" : "var(--clr-text-muted)",
+                            }}
+                        >
+                            {hideBudgetVsActual ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </motion.button>
+                    </div>
                     {allIncomeCategories.filter(
                         (cat) =>
                             (plannedIncomeByCat[cat] || 0) > 0 || (actualIncomeByCat[cat] || 0) > 0
@@ -741,15 +784,33 @@ export default function Dashboard({
                         </p>
                     )}
                 </motion.div>
-            )}
+            )
+            }
 
 
 
             {/* ── Transaction List ── */}
             <div>
-                <p className="section-title" style={{ fontSize: 15, marginBottom: 12 }}>
-                    Transactions
-                </p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <p className="section-title" style={{ fontSize: 15, margin: 0 }}>
+                        Transactions
+                    </p>
+                    <motion.button
+                        whileTap={{ scale: 0.85 }}
+                        onClick={() => setHideTransactions((v) => !v)}
+                        aria-label={hideTransactions ? "Show transactions" : "Hide transactions"}
+                        style={{
+                            width: 30, height: 30, borderRadius: "50%",
+                            border: "1.5px solid var(--clr-border)",
+                            background: hideTransactions ? "rgba(99,102,241,0.1)" : "transparent",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer",
+                            color: hideTransactions ? "var(--clr-primary)" : "var(--clr-text-muted)",
+                        }}
+                    >
+                        {hideTransactions ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </motion.button>
+                </div>
 
                 {/* Search + Filter */}
                 <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
@@ -819,12 +880,12 @@ export default function Dashboard({
                                 key={t.id}
                                 transaction={t}
                                 onDelete={deleteTransaction}
-                                hideAmounts={hideAmounts}
+                                hideAmounts={hideTransactions}
                             />
                         ))}
                     </div>
                 )}
             </div>
-        </motion.div>
+        </motion.div >
     );
 }
