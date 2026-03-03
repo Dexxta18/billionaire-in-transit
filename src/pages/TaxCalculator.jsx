@@ -342,7 +342,6 @@ export default function TaxCalculator({ taxInput, setTaxInput }) {
                     gradient="grad-net"
                     hint="Take-home pay"
                     delay={0.15}
-                    hideAmounts={hideAmounts}
                 />
             </div>
 
