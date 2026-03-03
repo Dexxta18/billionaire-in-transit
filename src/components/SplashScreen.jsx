@@ -1,24 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
- * Full-screen splash/landing image shown for ~2.5 s on first load,
- * with animated title and slogan, then fades out to reveal the main app.
+ * Full-screen splash/landing page with animated title, slogan,
+ * and an Enter button. User must tap to proceed.
  */
 export default function SplashScreen({ onFinish }) {
-    const [visible, setVisible] = useState(true);
+    const [exiting, setExiting] = useState(false);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setVisible(false);
-            setTimeout(onFinish, 600);
-        }, 2800);
-        return () => clearTimeout(timer);
-    }, [onFinish]);
+    const handleEnter = () => {
+        setExiting(true);
+        setTimeout(onFinish, 600);
+    };
 
     return (
         <AnimatePresence>
-            {visible && (
+            {!exiting && (
                 <motion.div
                     key="splash"
                     initial={{ opacity: 1 }}
@@ -45,7 +42,7 @@ export default function SplashScreen({ onFinish }) {
                             width: "100%",
                             height: "100%",
                             objectFit: "cover",
-                            filter: "brightness(0.45)",
+                            filter: "brightness(0.4)",
                         }}
                     />
 
@@ -56,6 +53,10 @@ export default function SplashScreen({ onFinish }) {
                             zIndex: 2,
                             textAlign: "center",
                             padding: "0 24px",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 0,
                         }}
                     >
                         {/* Title */}
@@ -94,7 +95,7 @@ export default function SplashScreen({ onFinish }) {
                             style={{
                                 height: 2,
                                 background: "linear-gradient(90deg, transparent, #6366f1, transparent)",
-                                margin: "16px auto",
+                                margin: "16px 0",
                                 width: 160,
                                 borderRadius: 2,
                             }}
@@ -104,7 +105,7 @@ export default function SplashScreen({ onFinish }) {
                         <motion.p
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 1.1, duration: 0.7, ease: "easeOut" }}
+                            transition={{ delay: 1.0, duration: 0.7, ease: "easeOut" }}
                             style={{
                                 fontSize: 15,
                                 fontWeight: 500,
@@ -117,6 +118,33 @@ export default function SplashScreen({ onFinish }) {
                         >
                             Your wealth is loading… manage the journey.
                         </motion.p>
+
+                        {/* Enter button */}
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleEnter}
+                            style={{
+                                marginTop: 32,
+                                padding: "14px 48px",
+                                fontSize: 15,
+                                fontWeight: 700,
+                                fontFamily: "var(--font-main, Inter, sans-serif)",
+                                color: "white",
+                                background: "linear-gradient(135deg, #6366f1, #818cf8)",
+                                border: "none",
+                                borderRadius: 50,
+                                cursor: "pointer",
+                                boxShadow: "0 4px 24px rgba(99,102,241,0.4)",
+                                letterSpacing: "0.05em",
+                                textTransform: "uppercase",
+                            }}
+                        >
+                            Enter
+                        </motion.button>
                     </div>
                 </motion.div>
             )}
