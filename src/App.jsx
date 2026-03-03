@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { RefreshCw } from "lucide-react";
 
 import PullToRefresh from "./components/PullToRefresh";
+import SplashScreen from "./components/SplashScreen";
 import BottomNav from "./components/BottomNav";
 import Dashboard from "./pages/Dashboard";
 import AddTransaction from "./pages/AddTransaction";
@@ -126,6 +127,13 @@ export default function App() {
         animate: { opacity: 1, y: 0 },
         exit: { opacity: 0, y: -8 },
     };
+
+    // ── Splash screen ──
+    const [showSplash, setShowSplash] = useState(true);
+
+    if (showSplash) {
+        return <SplashScreen onFinish={() => setShowSplash(false)} />;
+    }
 
     return (
         <PullToRefresh>
