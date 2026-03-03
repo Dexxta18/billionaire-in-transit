@@ -77,7 +77,7 @@ export default function SplashScreen({ onFinish }) {
                             Billionaire{" "}
                             <span
                                 style={{
-                                    background: "linear-gradient(135deg, #818cf8, #6366f1, #a78bfa)",
+                                    background: "linear-gradient(135deg, #fbbf24, #f59e0b, #eab308)",
                                     WebkitBackgroundClip: "text",
                                     WebkitTextFillColor: "transparent",
                                     backgroundClip: "text",
